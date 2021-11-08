@@ -6,6 +6,7 @@
 
 <script>
 import Form from "./components/Form.vue";
+import "normalize.css";
 
 export default {
   name: "App",

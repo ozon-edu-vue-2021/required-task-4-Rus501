@@ -105,7 +105,7 @@
           <div class="row-input"></div>
         </div>
 
-        <div v-if="formData.nationality === 'Russia'" class="row">
+        <div v-if="isRussia" class="row">
           <div class="row-input row-input-id">
             <div class="row-input">
               <label for="last-name">Серия паспорта</label>
@@ -135,7 +135,7 @@
           </div>
         </div>
 
-        <div v-else-if="notRussia">
+        <div v-else-if="formData.nationality">
           <div class="row">
             <div class="row-input row-input-id">
               <div class="row-input">
@@ -279,8 +279,9 @@ export default {
         prevFirstName: "",
       },
       inputIsFocused: false,
-      throttleInput: null,
-      filteredNations: [],
+      throttleInput: debounce(this.filterNationalities, 1000),
+      filteredNations: [...citizenships],
+      russiaId: 8604,
     };
   },
   methods: {
@@ -288,8 +289,10 @@ export default {
       console.log(JSON.stringify(this.formData));
     },
     filterNationalities(e) {
-      this.filteredNations = citizenships.filter((item) =>
-        item.nationality.includes(e.target.value)
+      this.filteredNations = citizenships.filter(
+        (item) =>
+          item.nationality.includes(e.target.value) ||
+          item.nationality.toLowerCase().includes(e.target.value)
       );
     },
     hideDropDown() {
@@ -300,15 +303,11 @@ export default {
       this.inputIsFocused = false;
     },
   },
-  created() {
-    this.throttleInput = debounce(this.filterNationalities, 1000);
-  },
   computed: {
-    notRussia() {
-      return citizenships.find(
-        (item) =>
-          item.nationality === this.formData.nationality &&
-          item.nationality !== "Russia"
+    isRussia() {
+      return (
+        this.formData.nationality ===
+        citizenships.find((item) => item.id === this.russiaId).nationality
       );
     },
   },

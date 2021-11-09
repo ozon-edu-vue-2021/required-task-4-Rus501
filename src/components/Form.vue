@@ -288,7 +288,6 @@ export default {
       console.log(JSON.stringify(this.formData));
     },
     filterNationalities(e) {
-      console.log(e.target.value);
       this.filteredNations = citizenships.filter((item) =>
         item.nationality.includes(e.target.value)
       );

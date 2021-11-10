@@ -83,7 +83,7 @@
           <div v-click-outside="hideDropDown" class="row-input">
             <label for="nationality">Гражданство</label>
             <input
-              v-model="formData.nationality.name"
+              v-model="formData.nationality"
               id="nationality"
               name="nationality"
               @focus="inputIsFocused = true"
@@ -267,10 +267,7 @@ export default {
         birthDate: "",
         email: "",
         gender: "",
-        nationality: {
-          id: "",
-          name: "",
-        },
+        nationality: "",
         passportSeries: "",
         passportNumber: "",
         passportDate: "",
@@ -292,7 +289,7 @@ export default {
       console.log(JSON.stringify(this.formData));
     },
     filterNationalities(e) {
-      this.formData.nationality.name = e.target.value;
+      this.formData.nationality = e.target.value;
       this.filteredNations = citizenships.filter(
         (item) =>
           item.nationality.includes(e.target.value) ||
@@ -303,18 +300,17 @@ export default {
       this.inputIsFocused = false;
     },
     pickNation(citizenship) {
-      this.formData.nationality.id = citizenship?.id;
-      this.formData.nationality.name = citizenship?.nationality;
+      this.formData.nationality = citizenship?.nationality;
       this.inputIsFocused = false;
     },
   },
   computed: {
     isRussia() {
-      return this.formData.nationality.name === RUSSIA_NAME;
+      return this.formData.nationality === RUSSIA_NAME;
     },
     isValid() {
       return citizenships.find(
-        (item) => item.nationality === this.formData.nationality.name
+        (item) => item.nationality === this.formData.nationality
       );
     },
   },

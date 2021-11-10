@@ -1,3 +1,3 @@
-const RUSSIA_NAME = "Russia";
+const ID_RUSSIA = 8604;
 
-export default RUSSIA_NAME;
+export default ID_RUSSIA;

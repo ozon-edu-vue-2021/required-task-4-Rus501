@@ -83,7 +83,7 @@
           <div v-click-outside="hideDropDown" class="row-input">
             <label for="nationality">Гражданство</label>
             <input
-              v-model="formData.nationality"
+              v-model="searchWord"
               id="nationality"
               name="nationality"
               @focus="inputIsFocused = true"
@@ -95,7 +95,7 @@
                 <li
                   v-for="citizenship in filteredNations"
                   :key="citizenship.id"
-                  @click="pickNation(citizenship)"
+                  @click="setCountry(citizenship)"
                 >
                   {{ citizenship.nationality }}
                 </li>
@@ -250,7 +250,7 @@ import citizenships from "../../src/assets/data/citizenships.json";
 import passports from "../../src/assets/data/passport-types.json";
 import clickOutside from "vue-click-outside";
 import { debounce } from "@/helpers/debounce";
-import RUSSIA_NAME from "@/constants/russiaID";
+import ID_RUSSIA from "@/constants/russiaID";
 
 export default {
   directives: {
@@ -267,7 +267,7 @@ export default {
         birthDate: "",
         email: "",
         gender: "",
-        nationality: "",
+        nationality: null,
         passportSeries: "",
         passportNumber: "",
         passportDate: "",
@@ -279,7 +279,9 @@ export default {
         prevLastName: "",
         prevFirstName: "",
       },
+      searchWord: "",
       inputIsFocused: false,
+      inputIsChanged: false,
       throttleInput: debounce(this.filterNationalities, 1000),
       filteredNations: [...citizenships],
     };
@@ -289,28 +291,41 @@ export default {
       console.log(JSON.stringify(this.formData));
     },
     filterNationalities(e) {
-      this.formData.nationality = e.target.value;
+      this.inputIsChanged = true;
+      this.searchWord = e.target.value;
+
       this.filteredNations = citizenships.filter(
         (item) =>
-          item.nationality.includes(e.target.value) ||
-          item.nationality.toLowerCase().includes(e.target.value)
+          item.nationality.includes(this.searchWord) ||
+          item.nationality.toLowerCase().includes(this.searchWord)
       );
+
+      if (
+        this.inputIsChanged &&
+        !this.filteredNations.find(
+          (item) => item.nationality === this.searchWord
+        )
+      ) {
+        this.formData.nationality = null;
+      }
     },
     hideDropDown() {
       this.inputIsFocused = false;
     },
-    pickNation(citizenship) {
-      this.formData.nationality = citizenship?.nationality;
+    setCountry(country) {
+      this.formData.nationality = country;
+      this.searchWord = country.nationality;
       this.inputIsFocused = false;
+      this.inputIsChanged = false;
     },
   },
   computed: {
     isRussia() {
-      return this.formData.nationality === RUSSIA_NAME;
+      return this.formData.nationality?.id === ID_RUSSIA;
     },
     isValid() {
       return citizenships.find(
-        (item) => item.nationality === this.formData.nationality
+        (item) => item.nationality === this.formData.nationality?.nationality
       );
     },
   },

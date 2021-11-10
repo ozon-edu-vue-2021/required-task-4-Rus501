@@ -8,28 +8,40 @@
           <div class="row-input">
             <label for="last-name">Фамилия</label>
             <input
-              v-model="formData.lastName"
+              v-model="formData.lastName.value"
               id="last-name"
               name="last-name"
-              ref="lastNameInput"
+              :class="{ invalid: formData.lastName.isError }"
             />
-            <span v-if="valid.lastName">Только буквы русского алфавита</span>
+            <span v-if="formData.lastName.isError">
+              Только буквы русского алфавита
+            </span>
           </div>
+
           <div class="row-input">
             <label for="first-name">Имя</label>
             <input
-              v-model="formData.firstName"
+              v-model="formData.firstName.value"
               id="first-name"
               name="first-name"
+              :class="{ invalid: formData.firstName.isError }"
             />
+            <span v-if="formData.firstName.isError">
+              Только буквы русского алфавита
+            </span>
           </div>
+
           <div class="row-input">
             <label for="middle-name">Отчество</label>
             <input
-              v-model="formData.middleName"
+              v-model="formData.middleName.value"
               id="middle-name"
               name="middle-name"
+              :class="{ invalid: formData.middleName.isError }"
             />
+            <span v-if="formData.middleName.isError">
+              Только буквы русского алфавита
+            </span>
           </div>
         </div>
 
@@ -37,7 +49,7 @@
           <div class="row-input">
             <label for="date">Дата рождения</label>
             <input
-              v-model="formData.birthDate"
+              v-model="formData.birthDate.value"
               id="date"
               name="date"
               type="date"
@@ -50,7 +62,7 @@
           <div class="row-input">
             <label for="email">E-mail</label>
             <input
-              v-model="formData.email"
+              v-model="formData.email.value"
               id="email"
               name="email"
               type="email"
@@ -112,7 +124,7 @@
             <div class="row-input">
               <label for="last-name">Серия паспорта</label>
               <input
-                v-model="formData.passportSeries"
+                v-model="formData.passportSeries.value"
                 id="last-name"
                 name="last-name"
               />
@@ -120,7 +132,7 @@
             <div class="row-input">
               <label for="first-name">Номер паспорта</label>
               <input
-                v-model="formData.passportNumber"
+                v-model="formData.passportNumber.value"
                 id="first-name"
                 name="first-name"
               />
@@ -143,7 +155,7 @@
               <div class="row-input">
                 <label for="latin-last-name">Фамилия на латинице</label>
                 <input
-                  v-model="formData.latinLastName"
+                  v-model="formData.latinLastName.value"
                   id="latin-last-name"
                   name="latin-last-name"
                 />
@@ -151,7 +163,7 @@
               <div class="row-input">
                 <label for="latin-first-name">Имя на латинице</label>
                 <input
-                  v-model="formData.latinFirstName"
+                  v-model="formData.latinFirstName.value"
                   id="latin-first-name"
                   name="latin-first-name"
                 />
@@ -226,7 +238,7 @@
           <div class="row-input">
             <label for="prev-last-name">Предыдущая фамилия</label>
             <input
-              v-model="formData.prevLastName"
+              v-model="formData.prevLastName.value"
               id="prev-last-name"
               name="prev-last-name"
             />
@@ -234,7 +246,7 @@
           <div class="row-input">
             <label for="prev-first-name">Предыдущее имя</label>
             <input
-              v-model="formData.prevFirstName"
+              v-model="formData.prevFirstName.value"
               id="prev-first-name"
               name="prev-first-name"
             />
@@ -254,7 +266,7 @@ import clickOutside from "vue-click-outside";
 import { debounce } from "@/helpers/debounce";
 
 import ID_RUSSIA from "@/constants/russiaID";
-import { ONLY_RUSSIAN_LETTERS } from "@/constants/regex";
+import { ONLY_RUSSIAN_LETTERS_REGEX } from "@/constants/regex";
 
 export default {
   directives: {
@@ -265,37 +277,70 @@ export default {
       citizenships,
       passports,
       formData: {
-        lastName: "",
-        firstName: "",
-        middleName: "",
-        birthDate: "",
-        email: "",
+        lastName: {
+          value: "",
+          isError: false,
+        },
+        firstName: {
+          value: "",
+          isError: false,
+        },
+        middleName: {
+          value: "",
+          isError: false,
+        },
+        birthDate: {
+          value: "",
+          isError: false,
+        },
+        email: {
+          value: "",
+          isError: false,
+        },
         gender: "",
         nationality: null,
-        passportSeries: "",
-        passportNumber: "",
+        passportSeries: {
+          value: "",
+          isError: false,
+        },
+        passportNumber: {
+          value: "",
+          isError: false,
+        },
         passportDate: "",
-        latinLastName: "",
-        latinFirstName: "",
+        latinLastName: {
+          value: "",
+          isError: false,
+        },
+        latinFirstName: {
+          value: "",
+          isError: false,
+        },
         country: "",
         idType: "",
         changedName: "",
-        prevLastName: "",
-        prevFirstName: "",
+        prevLastName: {
+          value: "",
+          isError: false,
+        },
+        prevFirstName: {
+          value: "",
+          isError: false,
+        },
       },
       searchWord: "",
       inputIsFocused: false,
       inputIsChanged: false,
       throttleInput: debounce(this.filterNationalities, 1000),
       filteredNations: [...citizenships],
-      valid: {
-        lastName: false,
-      },
+      formIsValid: false,
     };
   },
   methods: {
     printToConsole() {
-      if (!this.checkValidity()) return;
+      this.checkValidity();
+      if (this.formIsValid === false) return;
+
       console.log(JSON.stringify(this.formData));
     },
     filterNationalities(e) {
@@ -326,17 +371,26 @@ export default {
       this.inputIsFocused = false;
       this.inputIsChanged = false;
     },
+    checkRussianLetters(item) {
+      ONLY_RUSSIAN_LETTERS_REGEX.test(item.value)
+        ? (item.isError = false)
+        : (item.isError = true);
+    },
     checkValidity() {
-      if (!ONLY_RUSSIAN_LETTERS.test(this.formData.lastName)) {
-        if (this.$refs.lastNameInput.value)
-          this.$refs.lastNameInput.className = "invalid";
-        this.valid.lastName = true;
-        return false;
+      this.checkRussianLetters(this.formData.lastName);
+      this.checkRussianLetters(this.formData.firstName);
+      this.checkRussianLetters(this.formData.middleName);
+
+      if (
+        this.formData.lastName.isError ||
+        this.formData.firstName.isError ||
+        this.formData.middleName.isError
+      ) {
+        this.formIsValid = false;
+        return;
       }
 
-      this.$refs.lastNameInput.className = "valid";
-      this.valid.lastName = false;
-      return true;
+      this.formIsValid = true;
     },
   },
   computed: {
@@ -362,16 +416,6 @@ export default {
 </style>
 
 <style scoped>
-input + span {
-  font-size: 12px;
-  color: red;
-}
-.row-input .invalid {
-  border-color: red;
-}
-.row-input .valid {
-  border-color: green;
-}
 .form {
   max-width: 800px;
   margin: 0 auto;
@@ -431,6 +475,14 @@ h1 {
   outline: none;
   border-color: var(--main-color);
   background-color: #fff;
+}
+
+input + span {
+  font-size: 12px;
+  color: red;
+}
+.row-input .invalid {
+  border-color: red;
 }
 
 .row-input-id {

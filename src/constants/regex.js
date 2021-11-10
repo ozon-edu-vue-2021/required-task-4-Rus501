@@ -1,0 +1,4 @@
+const ONLY_RUSSIAN_LETTERS = /^[ЁёА-я]+$/g;
+const ONLY_ENGLISH_LETTERS = /^[A-z]+$/g;
+
+export { ONLY_RUSSIAN_LETTERS, ONLY_ENGLISH_LETTERS };

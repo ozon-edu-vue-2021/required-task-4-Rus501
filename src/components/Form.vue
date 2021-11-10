@@ -11,7 +11,9 @@
               v-model="formData.lastName"
               id="last-name"
               name="last-name"
+              ref="lastNameInput"
             />
+            <span v-if="valid.lastName">Только буквы русского алфавита</span>
           </div>
           <div class="row-input">
             <label for="first-name">Имя</label>
@@ -250,7 +252,9 @@ import citizenships from "../../src/assets/data/citizenships.json";
 import passports from "../../src/assets/data/passport-types.json";
 import clickOutside from "vue-click-outside";
 import { debounce } from "@/helpers/debounce";
+
 import ID_RUSSIA from "@/constants/russiaID";
+import { ONLY_RUSSIAN_LETTERS } from "@/constants/regex";
 
 export default {
   directives: {
@@ -284,10 +288,14 @@ export default {
       inputIsChanged: false,
       throttleInput: debounce(this.filterNationalities, 1000),
       filteredNations: [...citizenships],
+      valid: {
+        lastName: false,
+      },
     };
   },
   methods: {
     printToConsole() {
+      if (!this.checkValidity()) return;
       console.log(JSON.stringify(this.formData));
     },
     filterNationalities(e) {
@@ -318,6 +326,18 @@ export default {
       this.inputIsFocused = false;
       this.inputIsChanged = false;
     },
+    checkValidity() {
+      if (!ONLY_RUSSIAN_LETTERS.test(this.formData.lastName)) {
+        if (this.$refs.lastNameInput.value)
+          this.$refs.lastNameInput.className = "invalid";
+        this.valid.lastName = true;
+        return false;
+      }
+
+      this.$refs.lastNameInput.className = "valid";
+      this.valid.lastName = false;
+      return true;
+    },
   },
   computed: {
     isRussia() {
@@ -342,6 +362,16 @@ export default {
 </style>
 
 <style scoped>
+input + span {
+  font-size: 12px;
+  color: red;
+}
+.row-input .invalid {
+  border-color: red;
+}
+.row-input .valid {
+  border-color: green;
+}
 .form {
   max-width: 800px;
   margin: 0 auto;
@@ -366,7 +396,7 @@ h1 {
 .row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  /* align-items: flex-end; */
   gap: 15px;
   margin-top: 22px;
   font-size: 14px;

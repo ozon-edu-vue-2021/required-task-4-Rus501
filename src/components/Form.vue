@@ -83,7 +83,7 @@
           <div v-click-outside="hideDropDown" class="row-input">
             <label for="nationality">Гражданство</label>
             <input
-              v-model="formData.nationality"
+              v-model="formData.nationality.name"
               id="nationality"
               name="nationality"
               @focus="inputIsFocused = true"
@@ -95,7 +95,7 @@
                 <li
                   v-for="citizenship in filteredNations"
                   :key="citizenship.id"
-                  @click="pickNation"
+                  @click="pickNation(citizenship)"
                 >
                   {{ citizenship.nationality }}
                 </li>
@@ -135,7 +135,7 @@
           </div>
         </div>
 
-        <div v-else-if="formData.nationality">
+        <div v-else-if="isValid">
           <div class="row">
             <div class="row-input row-input-id">
               <div class="row-input">
@@ -249,7 +249,8 @@
 import citizenships from "../../src/assets/data/citizenships.json";
 import passports from "../../src/assets/data/passport-types.json";
 import clickOutside from "vue-click-outside";
-import { debounce } from "@/helpers/debounce.js";
+import { debounce } from "@/helpers/debounce";
+import RUSSIA_NAME from "@/constants/russiaID";
 
 export default {
   directives: {
@@ -266,7 +267,10 @@ export default {
         birthDate: "",
         email: "",
         gender: "",
-        nationality: "",
+        nationality: {
+          id: "",
+          name: "",
+        },
         passportSeries: "",
         passportNumber: "",
         passportDate: "",
@@ -281,7 +285,6 @@ export default {
       inputIsFocused: false,
       throttleInput: debounce(this.filterNationalities, 1000),
       filteredNations: [...citizenships],
-      russiaId: 8604,
     };
   },
   methods: {
@@ -289,6 +292,7 @@ export default {
       console.log(JSON.stringify(this.formData));
     },
     filterNationalities(e) {
+      this.formData.nationality.name = e.target.value;
       this.filteredNations = citizenships.filter(
         (item) =>
           item.nationality.includes(e.target.value) ||
@@ -298,16 +302,19 @@ export default {
     hideDropDown() {
       this.inputIsFocused = false;
     },
-    pickNation(e) {
-      this.formData.nationality = e.target.textContent.trim();
+    pickNation(citizenship) {
+      this.formData.nationality.id = citizenship?.id;
+      this.formData.nationality.name = citizenship?.nationality;
       this.inputIsFocused = false;
     },
   },
   computed: {
     isRussia() {
-      return (
-        this.formData.nationality ===
-        citizenships.find((item) => item.id === this.russiaId).nationality
+      return this.formData.nationality.name === RUSSIA_NAME;
+    },
+    isValid() {
+      return citizenships.find(
+        (item) => item.nationality === this.formData.nationality.name
       );
     },
   },

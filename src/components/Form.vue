@@ -11,6 +11,7 @@
               v-model="formData.lastName.value"
               id="last-name"
               name="last-name"
+              placeholder="Иванов"
               :class="{ invalid: formData.lastName.isError }"
             />
             <span v-if="formData.lastName.isError">
@@ -24,6 +25,7 @@
               v-model="formData.firstName.value"
               id="first-name"
               name="first-name"
+              placeholder="Иван"
               :class="{ invalid: formData.firstName.isError }"
             />
             <span v-if="formData.firstName.isError">
@@ -37,6 +39,7 @@
               v-model="formData.middleName.value"
               id="middle-name"
               name="middle-name"
+              placeholder="Иванович"
               :class="{ invalid: formData.middleName.isError }"
             />
             <span v-if="formData.middleName.isError">
@@ -53,7 +56,11 @@
               id="date"
               name="date"
               type="date"
+              :class="{ invalid: formData.birthDate.isError }"
             />
+            <span v-if="formData.birthDate.isError">
+              Дата не может быть пустой или позже сегодняшнего числа
+            </span>
           </div>
           <div class="row-input"></div>
         </div>
@@ -66,7 +73,12 @@
               id="email"
               name="email"
               type="email"
+              placeholder="email@example.com"
+              :class="{ invalid: formData.email.isError }"
             />
+            <span v-if="formData.email.isError">
+              Email адрес должен содержать символ @ и точку в доменном имени
+            </span>
           </div>
         </div>
         <div class="radio-input-box">
@@ -127,7 +139,14 @@
                 v-model="formData.passportSeries.value"
                 id="last-name"
                 name="last-name"
+                placeholder="0123"
+                minlength="4"
+                maxlength="4"
+                :class="{ invalid: formData.passportSeries.isError }"
               />
+              <span v-if="formData.passportSeries.isError">
+                Серия паспорта должна состоять из 4 цифр
+              </span>
             </div>
             <div class="row-input">
               <label for="first-name">Номер паспорта</label>
@@ -135,7 +154,14 @@
                 v-model="formData.passportNumber.value"
                 id="first-name"
                 name="first-name"
+                placeholder="456789"
+                minlength="6"
+                maxlength="6"
+                :class="{ invalid: formData.passportNumber.isError }"
               />
+              <span v-if="formData.passportNumber.isError">
+                Номер паспорта должен состоять из 6 цифр
+              </span>
             </div>
           </div>
           <div class="row-input">
@@ -178,7 +204,7 @@
               <div class="row-input">
                 <label for="first-name">Номер паспорта</label>
                 <input
-                  v-model="formData.passportNumber"
+                  v-model="formData.passportNumberInt"
                   id="first-name"
                   name="first-name"
                 />
@@ -241,15 +267,24 @@
               v-model="formData.prevLastName.value"
               id="prev-last-name"
               name="prev-last-name"
+              :class="{ invalid: formData.prevLastName.isError }"
             />
+            <span v-if="formData.prevLastName.isError">
+              Only english letters
+            </span>
           </div>
+
           <div class="row-input">
             <label for="prev-first-name">Предыдущее имя</label>
             <input
               v-model="formData.prevFirstName.value"
               id="prev-first-name"
               name="prev-first-name"
+              :class="{ invalid: formData.prevFirstName.isError }"
             />
+            <span v-if="formData.prevFirstName.isError">
+              Only english letters
+            </span>
           </div>
         </div>
       </div>
@@ -260,13 +295,18 @@
 </template>
 
 <script>
-import citizenships from "../../src/assets/data/citizenships.json";
-import passports from "../../src/assets/data/passport-types.json";
-import clickOutside from "vue-click-outside";
+import citizenships from "@/assets/data/citizenships.json";
+import passports from "@/assets/data/passport-types.json";
 import { debounce } from "@/helpers/debounce";
+import clickOutside from "vue-click-outside";
 
 import ID_RUSSIA from "@/constants/russiaID";
-import { ONLY_RUSSIAN_LETTERS_REGEX } from "@/constants/regex";
+import {
+  ONLY_RUSSIAN_LETTERS_REGEX,
+  ONLY_ENGLISH_LETTERS_REGEX,
+  EMAIL_REGEX,
+  NUMBERS_ONLY_REGEX,
+} from "@/constants/regex";
 
 export default {
   directives: {
@@ -316,6 +356,7 @@ export default {
           value: "",
           isError: false,
         },
+        passportNumberInt: "",
         country: "",
         idType: "",
         changedName: "",
@@ -372,19 +413,63 @@ export default {
       this.inputIsChanged = false;
     },
     checkRussianLetters(item) {
-      ONLY_RUSSIAN_LETTERS_REGEX.test(item.value)
-        ? (item.isError = false)
-        : (item.isError = true);
+      item.isError = !ONLY_RUSSIAN_LETTERS_REGEX.test(item.value);
+    },
+    checkBirthDate(item) {
+      const today = new Date();
+      const date = `
+        ${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}
+      `;
+
+      if (!item.value) {
+        item.isError = true;
+        return;
+      }
+      item.isError = item.value > date.trim();
+    },
+    checkEmail(item) {
+      item.isError = !EMAIL_REGEX.test(item.value);
+    },
+    checkPassport(item) {
+      item.isError = !NUMBERS_ONLY_REGEX.test(item.value);
+    },
+    checkEnglishLetters(item) {
+      item.isError = !ONLY_ENGLISH_LETTERS_REGEX.test(item.value);
     },
     checkValidity() {
-      this.checkRussianLetters(this.formData.lastName);
-      this.checkRussianLetters(this.formData.firstName);
-      this.checkRussianLetters(this.formData.middleName);
+      const form = this.formData;
+
+      this.checkRussianLetters(form.lastName);
+      this.checkRussianLetters(form.firstName);
+      this.checkRussianLetters(form.middleName);
+      this.checkRussianLetters(form.prevLastName);
+      this.checkRussianLetters(form.prevFirstName);
+
+      this.checkBirthDate(form.birthDate);
+
+      this.checkEmail(form.email);
+
+      this.checkPassport(form.passportSeries);
+      this.checkPassport(form.passportNumber);
+
+      this.checkEnglishLetters(form.prevLastName);
+      this.checkEnglishLetters(form.prevFirstName);
+
+      const russianPassportNotValid =
+        this.isRussia && (form.passportSeries.isError || form.passportNumber);
+
+      const changedNameNotValid =
+        form.changedName === "Yes" &&
+        (form.prevLastName.isError || form.prevFirstName.isError);
 
       if (
-        this.formData.lastName.isError ||
-        this.formData.firstName.isError ||
-        this.formData.middleName.isError
+        form.lastName.isError ||
+        form.firstName.isError ||
+        form.middleName.isError ||
+        form.birthDate.isError ||
+        form.email.isError ||
+        russianPassportNotValid ||
+        changedNameNotValid
       ) {
         this.formIsValid = false;
         return;

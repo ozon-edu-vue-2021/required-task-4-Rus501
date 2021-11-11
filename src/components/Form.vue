@@ -416,16 +416,11 @@ export default {
       item.isError = !ONLY_RUSSIAN_LETTERS_REGEX.test(item.value);
     },
     checkBirthDate(item) {
-      const today = new Date();
-      const date = `
-        ${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}
-      `;
-
       if (!item.value) {
         item.isError = true;
         return;
       }
-      item.isError = item.value > date.trim();
+      item.isError = new Date(item.value) > new Date();
     },
     checkEmail(item) {
       item.isError = !EMAIL_REGEX.test(item.value);
@@ -455,21 +450,14 @@ export default {
       this.checkEnglishLetters(form.prevLastName);
       this.checkEnglishLetters(form.prevFirstName);
 
-      const russianPassportNotValid =
-        this.isRussia && (form.passportSeries.isError || form.passportNumber);
-
-      const changedNameNotValid =
-        form.changedName === "Yes" &&
-        (form.prevLastName.isError || form.prevFirstName.isError);
-
       if (
         form.lastName.isError ||
         form.firstName.isError ||
         form.middleName.isError ||
         form.birthDate.isError ||
         form.email.isError ||
-        russianPassportNotValid ||
-        changedNameNotValid
+        this.russianPassportNotValid ||
+        this.changedNameNotValid
       ) {
         this.formIsValid = false;
         return;
@@ -483,8 +471,22 @@ export default {
       return this.formData.nationality?.id === ID_RUSSIA;
     },
     isValid() {
-      return citizenships.find(
+      return !!citizenships.find(
         (item) => item.nationality === this.formData.nationality?.nationality
+      );
+    },
+    russianPassportNotValid() {
+      return (
+        this.isRussia &&
+        (this.formData.passportSeries.isError ||
+          this.formData.passportNumber.isError)
+      );
+    },
+    changedNameNotValid() {
+      return (
+        this.formData.changedName === "Yes" &&
+        (this.formData.prevLastName.isError ||
+          this.formData.prevFirstName.isError)
       );
     },
   },
